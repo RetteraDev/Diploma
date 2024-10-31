@@ -1,0 +1,30 @@
+@startuml awd
+
+title Диаграмма последовательности выбора задания
+
+actor "Пользователь" as User
+control "Система" as System
+database "База данных" as DB
+
+User -> System: Просмотреть доступные задания
+activate System
+System -> DB: Запросить актуальные задания
+activate DB
+DB --> System: Список заданий
+deactivate DB
+System --> User: Список заданий
+deactivate System
+
+User -> System: Выбрать задание
+activate System
+System -> DB: Закрепить за пользователем задание
+activate DB
+DB --> System
+deactivate DB
+System --> User: Уведомить о начале задания
+deactivate System
+
+...В 00:00 следующего дня по МСК...
+System --> User: Уведомить об окончании задания по времени
+
+@enduml

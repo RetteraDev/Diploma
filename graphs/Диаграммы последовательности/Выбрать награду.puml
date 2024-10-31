@@ -1,0 +1,51 @@
+@startuml
+title Диаграмма последовательности выбора награды
+
+actor "Пользователь" as User
+control "Система" as System
+database "База данных" as DB
+control "API" as API
+control "Почтовый сервер" as Post
+
+User -> System: Получить список доступных наград
+activate System
+System -> DB: Получить список доступных наград
+activate DB
+DB --> System: Список наград
+deactivate DB
+System --> User: Список наград
+deactivate System
+
+User -> System: Активировать награду
+activate System
+System -> DB: Получить баланс пользователя
+activate DB
+DB --> System: Баланс
+deactivate DB
+
+alt Баланс пользователя меньше стоимости награды
+System --> User: Сообщить о недостаточности средств
+
+else Баланса пользователя хватает для получения награды
+System -> DB: Получить информацию об награде
+activate DB
+DB --> System: Информация о награде
+deactivate DB
+
+System -> API: Запросить получение награды
+activate API
+API --> System: Информация о награде
+deactivate API
+
+System -> Post: Отправка сообщения с наградой пользователю
+activate Post
+Post--> System: ОК
+deactivate Post
+
+System -> User: Уведомить пользователя о пришедшей на почту награде
+
+end
+
+deactivate System
+
+@enduml

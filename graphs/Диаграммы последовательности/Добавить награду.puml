@@ -1,0 +1,43 @@
+@startuml
+title Диаграмма последовательности добавления награды
+
+actor "Администратор" as Admin
+control "Система" as System
+database "База данных" as DB
+control "API" as API
+
+alt Автоматическое обновление списка наград по API
+
+activate System
+System -> DB: Просмотреть список заведенных у системе API
+activate DB
+DB --> System: Список API
+deactivate DB
+
+loop Для каждого API
+    System ->> API: Запрос списка наград
+    activate API
+    API-->> System : Список наград
+    deactivate API
+    System ->> System : Формирование списка наград
+end
+
+System -> DB: Записать список наград
+activate DB
+DB --> System: ОК
+deactivate DB
+deactivate System
+
+else Ручное обновление списка наград
+
+Admin -> System: Записать награду
+activate System
+System -> DB: Записать награду
+activate DB
+DB --> System: ОК
+deactivate DB
+System --> Admin: OK
+deactivate System
+
+end
+@enduml
