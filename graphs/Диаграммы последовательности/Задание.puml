@@ -1,0 +1,90 @@
+@startuml
+
+title Диаграмма последовательности для заданий
+
+actor "Пользователь" as User
+control "Система" as System
+database "База данных" as DB
+
+== Выбор задания ==
+
+User -> System: Просмотреть доступные задания
+activate System
+System -> DB: Запросить актуальные задания
+activate DB
+DB --> System: Список заданий
+deactivate DB
+System --> User: Список заданий
+deactivate System
+
+User -> System: Выбрать задание
+activate System
+System -> DB: Закрепить за пользователем задание
+activate DB
+DB --> System
+deactivate DB
+System --> User: Уведомить о начале задания
+deactivate System
+
+...В 00:00 следующего дня по МСК...
+System --> User: Уведомить об окончании задания по времени
+
+== Выполнение задания ==
+
+alt Пользователь выполняет задание
+
+loop Пока задание не выполнено
+
+User --> System: Выполнить игровое действие
+activate System
+System -> System: Проанализировать действие пользователя
+
+opt Действие соответствует условию задания
+System -> System: Рассчитать прогресс на основе действия пользователя
+System ->> DB: Сохранить прогресс пользователя
+activate DB
+DB -->> System: Ок
+deactivate DB
+System --> User: Уведомить о прогрессе выполнения задания
+end
+
+opt Действие привело к завершению задания
+System -> System: Рассчитать награду
+System -> System: Начислить награду пользователю
+System ->> DB: Сохранить награду пользователя
+activate DB
+DB -->> System: Ок
+deactivate DB
+System ->> DB: Завершить задание пользователя
+activate DB
+DB -->> System: Ок
+deactivate DB
+System --> User: Уведомить о завершении задания и начислении награды
+deactivate System
+end
+
+end
+
+deactivate System
+
+else Пользователь отменяет задание
+User --> System: Отменить задание
+activate System
+System ->> DB: Завершить задание пользователя
+activate DB
+DB -->> System: Ок
+deactivate DB
+System --> User: Уведомить о завершении задания
+deactivate System
+
+else Превышено ограничение выполнения задания по времени
+System ->> DB: Завершить задание пользователя
+activate DB
+DB -->> System: Ок
+deactivate DB
+System --> User: Уведомить о завершении задания
+deactivate System
+
+end
+
+@enduml
