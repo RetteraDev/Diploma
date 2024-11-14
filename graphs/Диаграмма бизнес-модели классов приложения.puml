@@ -1,0 +1,74 @@
+@startuml
+skinparam classAttributeIconSize 0
+!theme plain
+title Диаграмма бизнес-модели классов приложения
+
+class "Игрок" as player
+
+class "Место" as place
+
+class "Покупка" as purchase
+abstract class "Награда" as reward
+class "Подписка" as subscribe
+class "Скидка" as discount
+class "Промокод" as promocode
+class "Билет" as ticket
+
+abstract class "Режим" as mode
+abstract class "Режим игры" as mode_play
+class "Режим обзора" as mode_view
+class "Режим прогулки" as mode_walk
+class "Режим посещения" as mode_visit
+
+class "Монета" as coin
+class "Результат" as result
+
+class "Геопозиция" as geoposition
+class "Путь" as path
+class "Карта" as map
+
+note as A
+    В режиме прогулки путь растет.
+    Строится по мере прогулки
+
+    ----
+    В режиме посещения путь сокращается.
+    Строится от точки пользователя до места заранее
+end note
+
+' A -- mode
+
+player "1" -- "*" purchase : Совершает >
+purchase -- reward : Содержит >
+purchase -- coin : Предоставляет >
+
+reward <|-- ticket
+reward <|--- subscribe
+reward <|-- discount
+reward <|--- promocode
+' ticket -[hidden]> promocode
+' discount -[hidden]> subscribe
+
+mode_play -right- result : Создает >
+result -up- coin : Содержит >
+result -- path : Содержит >
+mode_play -- path : Простраивает >
+
+player "0" -- "1" geoposition : Находится по >
+path "0" -- "*" geoposition : Хранит >
+place "0" -- "1" geoposition : Находится по >
+
+player "1" -- "*" coin : Получает >
+player "0" -- "1" mode : Находится в >
+
+mode <|-- mode_view
+mode <|-- mode_play
+mode_view -[hidden]> mode_play
+mode_play <|-- mode_walk
+mode_play <|-- mode_visit
+
+mode "0" -- "*" place : Показывает >
+mode_visit "0" -- "1" place : Устанавливает \nцель посещения <
+
+mode -right- map : Использует >
+@enduml

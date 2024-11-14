@@ -4,7 +4,7 @@ title Диаграмма последовательности добавлени
 actor "Администратор" as Admin
 control "Система" as System
 database "База данных" as DB
-control "API" as API
+control "API контрагента" as API
 
 alt Автоматическое обновление списка наград по API
 

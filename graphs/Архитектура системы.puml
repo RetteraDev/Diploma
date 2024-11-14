@@ -1,0 +1,21 @@
+@startuml
+title Архитектура системы
+!theme plain
+
+database "PostgreSQL" as sql_db
+
+actor "Клиентское приложение" as client
+
+rectangle "Серверное приложение" as server {
+    rectangle "RESTful API игры" as api_player {
+
+    }
+    rectangle "RESTful API игры" as api_player {
+
+    }
+}
+
+server --> sql_db
+client --> server
+
+@enduml

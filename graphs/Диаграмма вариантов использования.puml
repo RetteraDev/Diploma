@@ -1,0 +1,69 @@
+@startuml
+left to right direction
+!theme plain
+title Диаграмма вариантов использования
+
+<style>
+    .abstract {
+        FontStyle italic
+    }
+</style>
+
+:Пользователь: as user
+:Администратор: as admin
+:Игрок: as player
+
+user <|-left- admin
+user <|-right- player
+
+rectangle "Игра" {
+    (Войти) as sign_in
+    (Зарегистрироваться) as sign_up
+    (Выйти) as logout
+    (Восстановить пароль) as restore_password
+
+    (Управлять пользователями) as manage_users
+    (Изменить статус\nблокировки пользователя) as set_block_status
+
+    (Начать путь) as start_path
+    (Завершить путь) as end_path
+    (Выбрать место посещения) as select_place
+    (Просмотреть места посещения) as view_places
+    (Управлять местами посещения) as manage_places
+    (Управлять местами посещения) as manage_places
+
+    (Просмотреть награды) as view_rewards
+    (Приобрести награду) as buy_reward
+    (Управлять наградами) as manage_rewards
+
+    (Собрать монеты) as collect_coins
+
+    user --> sign_in
+    user --> sign_up
+    user --> logout
+    user --> restore_password
+
+    admin --> manage_users
+    admin --> set_block_status
+    admin --> manage_rewards
+    admin --> manage_places
+
+    player --> start_path
+    player --> end_path
+    player --> collect_coins
+    player --> view_rewards
+    player --> buy_reward
+    player --> select_place
+    player --> view_places
+
+    view_places <.. manage_places : <<include>>
+
+    view_rewards <... manage_rewards : <<include>>
+    view_rewards <.left. buy_reward : <<include>>
+
+    select_place ...> start_path : <<extends>>
+
+    view_places --[hidden]> select_place
+    sign_up -[hidden]> sign_in
+}
+@enduml
