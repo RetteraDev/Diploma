@@ -1,0 +1,953 @@
+openapi: 3.0.0
+info:
+  title: API для Онлайн Игры "Движение-Жизнь"
+  description: |
+    Этот документ описывает API для онлайн-игры "Движение-Жизнь".
+    API предоставляет возможности для авторизации, регистрации, управления персонажами,
+    сбора ресурсов, сражений с монстрами и других игровых механик.
+  version: 1.0.0
+servers:
+  - url: https://game.isuct.ru/v1
+    description: Продакшн сервер
+paths:
+  /auth/login:
+    post:
+      summary: Авторизация пользователя
+      description: Авторизация пользователя по никнейму и паролю.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                никнейм:
+                  type: string
+                пароль:
+                  type: string
+      responses:
+        '200':
+          description: Авторизация успешна
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  токен:
+                    type: string
+        '401':
+          description: Авторизация неуспешна
+
+  /auth/register:
+    post:
+      summary: Регистрация нового пользователя
+      description: Регистрация нового пользователя по никнейму, паролю и электронной почте.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                никнейм:
+                  type: string
+                пароль:
+                  type: string
+                электронная_почта:
+                  type: string
+      responses:
+        '201':
+          description: Регистрация успешна
+        '400':
+          description: Регистрация неуспешна
+
+  /characters:
+    get:
+      summary: Получение списка персонажей пользователя
+      description: Возвращает список всех персонажей, принадлежащих текущему пользователю.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Character'
+        '401':
+          description: Не авторизован
+
+    post:
+      summary: Создание нового персонажа
+      description: Создает нового персонажа для текущего пользователя.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                имя:
+                  type: string
+                тип:
+                  type: string
+      responses:
+        '201':
+          description: Персонаж успешно создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Character'
+        '400':
+          description: Неверные данные
+        '401':
+          description: Не авторизован
+
+  /characters/{id}:
+    get:
+      summary: Получение информации о персонаже
+      description: Возвращает информацию о конкретном персонаже по его ID.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Уникальный идентификатор персонажа
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Character'
+        '401':
+          description: Не авторизован
+        '404':
+          description: Персонаж не найден
+
+    put:
+      summary: Обновление информации о персонаже
+      description: Обновляет информацию о конкретном персонаже по его ID.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Уникальный идентификатор персонажа
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                имя:
+                  type: string
+                тип:
+                  type: string
+                текущаяШирота:
+                  type: number
+                  format: float
+                текущаяДолгота:
+                  type: number
+                  format: float
+                здоровье:
+                  type: integer
+                мана:
+                  type: integer
+      responses:
+        '200':
+          description: Информация о персонаже успешно обновлена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Character'
+        '400':
+          description: Неверные данные
+        '401':
+          description: Не авторизован
+        '404':
+          description: Персонаж не найден
+
+  /characters/{id}/locations:
+    get:
+      summary: Получение истории локаций персонажа
+      description: Возвращает историю локаций конкретного персонажа.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Уникальный идентификатор персонажа
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LocationHistory'
+        '401':
+          description: Не авторизован
+        '404':
+          description: Персонаж не найден
+
+    post:
+      summary: Обновление геолокации персонажа
+      description: Обновляет геолокацию конкретного персонажа.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Уникальный идентификатор персонажа
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                широта:
+                  type: number
+                  format: float
+                долгота:
+                  type: number
+                  format: float
+      responses:
+        '200':
+          description: Геолокация успешно обновлена
+        '400':
+          description: Неверные данные
+        '401':
+          description: Не авторизован
+        '404':
+          description: Персонаж не найден
+
+  /characters/{id}/items:
+    get:
+      summary: Получение списка предметов персонажа
+      description: Возвращает список предметов, принадлежащих конкретному персонажу.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Уникальный идентификатор персонажа
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Item'
+        '401':
+          description: Не авторизован
+        '404':
+          description: Персонаж не найден
+
+  /characters/{id}/resources:
+    get:
+      summary: Получение списка ресурсов на карте
+      description: Возвращает список доступных ресурсов на карте в радиусе одного километра от указанной геолокации.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Уникальный идентификатор персонажа
+          schema:
+            type: integer
+            format: int64
+        - in: query
+          name: широта
+          required: true
+          description: Широта геолокации
+          schema:
+            type: number
+            format: float
+        - in: query
+          name: долгота
+          required: true
+          description: Долгота геолокации
+          schema:
+            type: number
+            format: float
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Resource'
+        '400':
+          description: Неверные данные
+        '401':
+          description: Не авторизован
+        '404':
+          description: Персонаж не найден
+
+  /characters/{id}/resources/{resource_id}:
+    post:
+      summary: Сбор ресурса
+      description: Собирает ресурс и добавляет его в инвентарь персонажа.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Уникальный идентификатор персонажа
+          schema:
+            type: integer
+            format: int64
+        - in: path
+          name: resource_id
+          required: true
+          description: Уникальный идентификатор ресурса
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Ресурс успешно собран
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Item'
+        '400':
+          description: Неверные данные
+        '401':
+          description: Не авторизован
+        '404':
+          description: Персонаж или ресурс не найдены
+
+  /monsters:
+    get:
+      summary: Получение списка монстров на карте
+      description: Возвращает список доступных монстров на карте в радиусе одного километра от указанной геолокации.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: широта
+          required: true
+          description: Широта геолокации
+          schema:
+            type: number
+            format: float
+        - in: query
+          name: долгота
+          required: true
+          description: Долгота геолокации
+          schema:
+            type: number
+            format: float
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Monster'
+        '400':
+          description: Неверные данные
+        '401':
+          description: Не авторизован
+
+  /characters/{id}/monsters/{monster_id}:
+    post:
+      summary: Сражение с монстром
+      description: Начинает сражение с монстром и сохраняет результат в истории сражений.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Уникальный идентификатор персонажа
+          schema:
+            type: integer
+            format: int64
+        - in: path
+          name: monster_id
+          required: true
+          description: Уникальный идентификатор монстра
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Сражение началось
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  результат:
+                    type: string
+        '400':
+          description: Неверные данные
+        '401':
+          description: Не авторизован
+        '404':
+          description: Персонаж или монстр не найдены
+
+  /characters/{id}/battles:
+    get:
+      summary: Получение истории сражений
+      description: Возвращает историю сражений конкретного персонажа.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Уникальный идентификатор персонажа
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BattleHistory'
+        '401':
+          description: Не авторизован
+        '404':
+          description: Персонаж не найден
+
+  /characters/{id}/resource_history:
+    get:
+      summary: Получение истории сбора ресурсов
+      description: Возвращает историю сбора ресурсов конкретного персонажа.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: Уникальный идентификатор персонажа
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ResourceGatheringHistory'
+        '401':
+          description: Не авторизован
+        '404':
+          description: Персонаж не найден
+
+  /admin/resources:
+    get:
+      summary: Получение списка всех ресурсов на карте
+      description: Возвращает список всех ресурсов на карте.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Resource'
+        '401':
+          description: Не авторизован
+        '403':
+          description: Доступ запрещен
+
+    post:
+      summary: Добавление нового ресурса на карту
+      description: Добавляет новый ресурс на карту.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Resource'
+      responses:
+        '201':
+          description: Ресурс успешно добавлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+        '400':
+          description: Неверные данные
+        '401':
+          description: Не авторизован
+        '403':
+          description: Доступ запрещен
+
+  /admin/resources/{resource_id}:
+    get:
+      summary: Получение информации о ресурсе
+      description: Возвращает информацию о конкретном ресурсе по его ID.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: resource_id
+          required: true
+          description: Уникальный идентификатор ресурса
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+        '401':
+          description: Не авторизован
+        '403':
+          description: Доступ запрещен
+        '404':
+          description: Ресурс не найден
+
+    put:
+      summary: Обновление информации о ресурсе
+      description: Обновляет информацию о конкретном ресурсе по его ID.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: resource_id
+          required: true
+          description: Уникальный идентификатор ресурса
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Resource'
+      responses:
+        '200':
+          description: Информация о ресурсе успешно обновлена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resource'
+        '400':
+          description: Неверные данные
+        '401':
+          description: Не авторизован
+        '403':
+          description: Доступ запрещен
+        '404':
+          description: Ресурс не найден
+
+    delete:
+      summary: Удаление ресурса с карты
+      description: Удаляет конкретный ресурс с карты.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: resource_id
+          required: true
+          description: Уникальный идентификатор ресурса
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Ресурс успешно удален
+        '401':
+          description: Не авторизован
+        '403':
+          description: Доступ запрещен
+        '404':
+          description: Ресурс не найден
+
+  /admin/monsters:
+    get:
+      summary: Получение списка всех монстров на карте
+      description: Возвращает список всех монстров на карте.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Monster'
+        '401':
+          description: Не авторизован
+        '403':
+          description: Доступ запрещен
+
+    post:
+      summary: Добавление нового монстра на карту
+      description: Добавляет нового монстра на карту.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Monster'
+      responses:
+        '201':
+          description: Монстр успешно добавлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Monster'
+        '400':
+          description: Неверные данные
+        '401':
+          description: Не авторизован
+        '403':
+          description: Доступ запрещен
+
+  /admin/monsters/{monster_id}:
+    get:
+      summary: Получение информации о монстре
+      description: Возвращает информацию о конкретном монстре по его ID.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: monster_id
+          required: true
+          description: Уникальный идентификатор монстра
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Monster'
+        '401':
+          description: Не авторизован
+        '403':
+          description: Доступ запрещен
+        '404':
+          description: Монстр не найден
+
+    put:
+      summary: Обновление информации о монстре
+      description: Обновляет информацию о конкретном монстре по его ID.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: monster_id
+          required: true
+          description: Уникальный идентификатор монстра
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Monster'
+      responses:
+        '200':
+          description: Информация о монстре успешно обновлена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Monster'
+        '400':
+          description: Неверные данные
+        '401':
+          description: Не авторизован
+        '403':
+          description: Доступ запрещен
+        '404':
+          description: Монстр не найден
+
+    delete:
+      summary: Удаление монстра с карты
+      description: Удаляет конкретного монстра с карты.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: monster_id
+          required: true
+          description: Уникальный идентификатор монстра
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Монстр успешно удален
+        '401':
+          description: Не авторизован
+        '403':
+          description: Доступ запрещен
+        '404':
+          description: Монстр не найден
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        идентификатор:
+          type: integer
+          format: int64
+          description: Уникальный идентификатор пользователя
+        никнейм:
+          type: string
+          description: Никнейм пользователя
+        пароль:
+          type: string
+          description: Пароль пользователя
+        электронная_почта:
+          type: string
+          description: Электронная почта пользователя
+        роль:
+          type: string
+          description: Роль пользователя (например, администратор, игрок)
+
+    Character:
+      type: object
+      properties:
+        идентификатор:
+          type: integer
+          format: int64
+          description: Уникальный идентификатор персонажа
+        пользователь_идентификатор:
+          type: integer
+          format: int64
+          description: Уникальный идентификатор пользователя
+        имя:
+          type: string
+          description: Имя персонажа
+        текущаяШирота:
+          type: number
+          format: float
+          description: Текущая широта персонажа
+        текущаяДолгота:
+          type: number
+          format: float
+          description: Текущая долгота персонажа
+        здоровье:
+          type: integer
+          description: Здоровье персонажа
+        мана:
+          type: integer
+          description: Мана персонажа
+        инвентарь:
+          type: array
+          items:
+            $ref: '#/components/schemas/Item'
+        экипировка:
+          type: array
+          items:
+            $ref: '#/components/schemas/Item'
+
+    LocationHistory:
+      type: object
+      properties:
+        идентификатор:
+          type: integer
+          format: int64
+          description: Уникальный идентификатор записи истории локаций
+        персонаж_идентификатор:
+          type: integer
+          format: int64
+          description: Уникальный идентификатор персонажа
+        широта:
+          type: number
+          format: float
+          description: Широта локации
+        долгота:
+          type: number
+          format: float
+          description: Долгота локации
+        дата:
+          type: string
+          format: date-time
+          description: Дата и время записи локации
+
+    Item:
+      type: object
+      properties:
+        идентификатор:
+          type: integer
+          format: int64
+          description: Уникальный идентификатор предмета
+        персонаж_идентификатор:
+          type: integer
+          format: int64
+          description: Уникальный идентификатор персонажа
+        название:
+          type: string
+          description: Название предмета
+        тип:
+          type: string
+          description: Тип предмета (например, Оружие, Броня, Зелье)
+        количество:
+          type: integer
+          description: Количество предметов
+        экипирован:
+          type: boolean
+          description: Флаг, указывающий, экипирован ли предмет
+
+    Resource:
+      type: object
+      properties:
+        идентификатор:
+          type: integer
+          format: int64
+          description: Уникальный идентификатор ресурса
+        название:
+          type: string
+          description: Название ресурса
+        тип:
+          type: string
+          description: Тип ресурса (например, Оружие, Броня, Зелье)
+        широта:
+          type: number
+          format: float
+          description: Широта ресурса на карте
+        долгота:
+          type: number
+          format: float
+          description: Долгота ресурса на карте
+        количество:
+          type: integer
+          description: Количество ресурсов
+
+    Monster:
+      type: object
+      properties:
+        идентификатор:
+          type: integer
+          format: int64
+          description: Уникальный идентификатор монстра
+        широта:
+          type: number
+          format: float
+          description: Широта монстра на карте
+        долгота:
+          type: number
+          format: float
+          description: Долгота монстра на карте
+        здоровье:
+          type: integer
+          description: Здоровье монстра
+        атака:
+          type: integer
+          description: Атака монстра
+        защита:
+          type: integer
+          description: Защита монстра
+        тип:
+          type: string
+          description: Тип монстра (например, Орк, Гоблин, Дракон)
+
+    BattleHistory:
+      type: object
+      properties:
+        идентификатор:
+          type: integer
+          format: int64
+          description: Уникальный идентификатор записи истории сражений
+        персонаж_идентификатор:
+          type: integer
+          format: int64
+          description: Уникальный идентификатор персонажа
+        монстр_идентификатор:
+          type: integer
+          format: int64
+          description: Уникальный идентификатор монстра
+        дата:
+          type: string
+          format: date-time
+          description: Дата и время сражения
+        результат:
+          type: string
+          description: Результат сражения (например, Победа, Поражение)
+
+    ResourceGatheringHistory:
+      type: object
+      properties:
+        идентификатор:
+          type: integer
+          format: int64
+          description: Уникальный идентификатор записи истории сбора ресурсов
+        персонаж_идентификатор:
+          type: integer
+          format: int64
+          description: Уникальный идентификатор персонажа
+        ресурс_идентификатор:
+          type: integer
+          format: int64
+          description: Уникальный идентификатор ресурса
+        дата:
+          type: string
+          format: date-time
+          description: Дата и время сбора ресурса
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
